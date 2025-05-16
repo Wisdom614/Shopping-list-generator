@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shopping List Generator</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+    <style>
+        :root {
+            --primary-color: #4a6fa5;
+            --secondary-color: #6b8cae;
+            --accent-color: #ff7e5f;
+            --light-color: #f8f9fa;
+            --dark-color: #343a40;
+            --success-color: #28a745;
+        }
+        
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: #f5f7fa;
+            color: var(--dark-color);
+            line-height: 1.6;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+            padding: 30px;
+        }
+        
+        h1 {
+            text-align: center;
+            color: var(--primary-color);
+            margin-bottom: 30px;
+            font-weight: 600;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: var(--primary-color);
+        }
+        
+        input, button {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+        
+        input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 2px rgba(74, 111, 165, 0.2);
+        }
+        
+        button {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-weight: 500;
+            transition: background-color 0.3s;
+            margin-top: 10px;
+        }
+        
+        button:hover {
+            background-color: var(--secondary-color);
+        }
+        
+        .btn-secondary {
+            background-color: var(--accent-color);
+        }
+        
+        .btn-secondary:hover {
+            background-color: #ff6a45;
+        }
+        
+        .items-container {
+            margin-top: 30px;
+        }
+        
+        .item-row {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+            align-items: center;
+        }
+        
+        .item-row input {
+            flex: 3;
+        }
+        
+        .item-row input.price {
+            flex: 1;
+        }
+        
+        .remove-btn {
+            flex: 0 0 40px;
+            width: 40px;
+            height: 40px;
+            background-color: #dc3545;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+        }
+        
+        .remove-btn:hover {
+            background-color: #c82333;
+        }
+        
+        .add-btn {
+            background-color: var(--success-color);
+            width: auto;
+            padding: 10px 20px;
+            margin-top: 0;
+        }
+        
+        .add-btn:hover {
+            background-color: #218838;
+        }
+        
+        .total-section {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #e9ecef;
+            border-radius: 5px;
+            text-align: right;
+            font-weight: 600;
+            font-size: 18px;
+        }
+        
+        .total-amount {
+            color: var(--primary-color);
+            font-size: 24px;
+        }
+        
+        .actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 30px;
+        }
+        
+        .actions button {
+            flex: 1;
+        }
+        
+        @media (max-width: 600px) {
+            .item-row {
+                flex-direction: column;
+            }
+            
+            .item-row input, .item-row button {
+                width: 100%;
+            }
+            
+            .actions {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Shopping List Generator</h1>
+        
+        <div class="form-group">
+            <label for="listTitle">List Title</label>
+            <input type="text" id="listTitle" placeholder="e.g. Weekly Groceries, Party Supplies">
+        </div>
+        
+        <div class="form-group">
+            <label>Items to Purchase</label>
+            <div id="itemsContainer" class="items-container">
+                <!-- Items will be added here dynamically -->
+            </div>
+            <button id="addItemBtn" class="add-btn">+ Add Item</button>
+        </div>
+        
+        <div class="total-section">
+            Total: <span id="totalAmount" class="total-amount">XAF</span>
+        </div>
+        
+        <div class="actions">
+            <button id="generatePdfBtn">Generate PDF</button>
+            <button id="clearListBtn" class="btn-secondary">Clear List</button>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const itemsContainer = document.getElementById('itemsContainer');
+            const addItemBtn = document.getElementById('addItemBtn');
+            const generatePdfBtn = document.getElementById('generatePdfBtn');
+            const clearListBtn = document.getElementById('clearListBtn');
+            const listTitle = document.getElementById('listTitle');
+            const totalAmount = document.getElementById('totalAmount');
+            
+            let itemCount = 0;
+            
+            // Add initial item
+            addItem();
+            
+            // Event listeners
+            addItemBtn.addEventListener('click', addItem);
+            generatePdfBtn.addEventListener('click', generatePdf);
+            clearListBtn.addEventListener('click', clearList);
+            
+            // Function to add a new item row
+            function addItem() {
+                itemCount++;
+                const itemRow = document.createElement('div');
+                itemRow.className = 'item-row';
+                itemRow.innerHTML = `
+                    <input type="text" class="item-name" placeholder="Item name" data-id="${itemCount}">
+                    <input type="number" class="item-price" placeholder="Price" min="0" step="0.01" data-id="${itemCount}">
+                    <button class="remove-btn" data-id="${itemCount}">×</button>
+                `;
+                itemsContainer.appendChild(itemRow);
+                
+                // Add event listener to the remove button
+                itemRow.querySelector('.remove-btn').addEventListener('click', function() {
+                    itemsContainer.removeChild(itemRow);
+                    calculateTotal();
+                });
+                
+                // Add event listeners for price changes
+                itemRow.querySelector('.item-price').addEventListener('input', calculateTotal);
+            }
+            
+            // Function to calculate the total
+            function calculateTotal() {
+                let total = 0;
+                const priceInputs = document.querySelectorAll('.item-price');
+                
+                priceInputs.forEach(input => {
+                    const value = parseFloat(input.value) || 0;
+                    total += value;
+                });
+                
+                totalAmount.textContent = `${total}CFA`;
+                return total;
+            }
+            
+            // Function to generate PDF
+            function generatePdf() {
+                const { jsPDF } = window.jspdf;
+                const doc = new jsPDF();
+                
+                // Title
+                const title = listTitle.value || 'My Shopping List';
+                doc.setFontSize(20);
+                doc.setTextColor(74, 111, 165);
+                doc.text(title, 105, 20, { align: 'center' });
+                
+                // Date
+                const options = { year: 'numeric', month: 'long', day: 'numeric' };
+                const today = new Date().toLocaleDateString('en-US', options);
+                doc.setFontSize(10);
+                doc.setTextColor(100, 100, 100);
+                doc.text(`Generated on: ${today}`, 105, 30, { align: 'center' });
+                
+                // Items table
+                const itemRows = [];
+                const itemElements = document.querySelectorAll('.item-row');
+                
+                itemElements.forEach(row => {
+                    const name = row.querySelector('.item-name').value || 'Unnamed item';
+                    const price = parseFloat(row.querySelector('.item-price').value) || 0;
+                    itemRows.push({
+                        name: name,
+                        price: `${price}CFA`
+                    });
+                });
+                
+                // AutoTable for items
+                doc.autoTable({
+                    startY: 40,
+                    head: [['Item', 'Price']],
+                    body: itemRows.map(item => [item.name, item.price]),
+                    headStyles: {
+                        fillColor: [74, 111, 165],
+                        textColor: [255, 255, 255],
+                        fontStyle: 'bold'
+                    },
+                    alternateRowStyles: {
+                        fillColor: [240, 240, 240]
+                    },
+                    columnStyles: {
+                        0: { cellWidth: 'auto', fontStyle: 'bold' },
+                        1: { cellWidth: 'auto', halign: 'right' }
+                    },
+                    margin: { top: 10 }
+                });
+                
+                // Total
+                const total = calculateTotal();
+                const finalY = doc.lastAutoTable.finalY + 10;
+                
+                doc.setFontSize(14);
+                doc.setTextColor(0, 0, 0);
+                doc.text('Total:', 140, finalY);
+                doc.text('Number: 671657357', 100, 80, {align: 'center'});
+                doc.setFontSize(16);
+                doc.setTextColor(74, 111, 165);
+                doc.text(`${total}CFA`, 170, finalY);
+                
+                // Footer
+                doc.setFontSize(10);
+                doc.setTextColor(100, 100, 100);
+                //doc.text('BEWISE.com', 105, 285, { align: 'center' });
+                doc.text('wisdombesong123@gmail.com', 105, 285, { align: 'center' });
+                
+                // Save the PDF
+                doc.save(`${title.replace(/ /g, '_')}_${today.replace(/ /g, '_')}.pdf`);
+            }
+            
+            // Function to clear the list
+            function clearList() {
+                if (confirm('Are you sure you want to clear the entire list?')) {
+                    itemsContainer.innerHTML = '';
+                    listTitle.value = '';
+                    totalAmount.textContent = 'CFA';
+                    itemCount = 0;
+                    addItem(); // Add one empty item back
+                }
+            }
+        });
+    </script>
+</body>
+</html>
