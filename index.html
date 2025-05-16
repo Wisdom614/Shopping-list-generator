@@ -188,7 +188,7 @@
         
         <div class="form-group">
             <label for="listTitle">List Title</label>
-            <input type="text" id="listTitle" placeholder="e.g. Weekly Groceries, Party Supplies">
+            <input type="text" id="listTitle" placeholder="Enter list title">
         </div>
         
         <div class="form-group">
@@ -204,7 +204,7 @@
         </div>
         
         <div class="actions">
-            <button id="generatePdfBtn">Generate PDF</button>
+            <button id="generatePdfBtn">Download List</button>
             <button id="clearListBtn" class="btn-secondary">Clear List</button>
         </div>
     </div>
@@ -236,7 +236,7 @@
                 itemRow.innerHTML = `
                     <input type="text" class="item-name" placeholder="Item name" data-id="${itemCount}">
                     <input type="number" class="item-price" placeholder="Price" min="0" step="0.01" data-id="${itemCount}">
-                    <button class="remove-btn" data-id="${itemCount}">×</button>
+                    <button class="remove-btn" data-id="${itemCount}">Ã—</button>
                 `;
                 itemsContainer.appendChild(itemRow);
                 
@@ -322,7 +322,7 @@
                 doc.setFontSize(14);
                 doc.setTextColor(0, 0, 0);
                 doc.text('Total:', 140, finalY);
-                doc.text('Number: 671657357', 100, 80, {align: 'center'});
+                //doc.text('Number: 671657357', 100, 80, {align: 'center'});
                 doc.setFontSize(16);
                 doc.setTextColor(74, 111, 165);
                 doc.text(`${total}CFA`, 170, finalY);
@@ -332,6 +332,11 @@
                 doc.setTextColor(100, 100, 100);
                 //doc.text('BEWISE.com', 105, 285, { align: 'center' });
                 doc.text('wisdombesong123@gmail.com', 105, 285, { align: 'center' });
+                //Header
+                doc.setFontSize(10);
+                doc.setTextColor(100, 87, 64);
+                //doc.text('BEWISE.com', 105, 285, { align: 'center' });
+                doc.text('Number:   671657357', 16, 30);
                 
                 // Save the PDF
                 doc.save(`${title.replace(/ /g, '_')}_${today.replace(/ /g, '_')}.pdf`);
