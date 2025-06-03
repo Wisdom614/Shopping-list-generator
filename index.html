@@ -174,7 +174,7 @@
             }
             
             .item-row input, .item-row button {
-                width: 100%;
+                width: 90%;
                 display: flex;
             }
             . remove-btn{
@@ -241,7 +241,7 @@
                 itemRow.innerHTML = `
                     <input type="text" class="item-name" placeholder="Item name" data-id="${itemCount}">
                     <input type="number" class="item-price" placeholder="Price" min="0" step="0.01" data-id="${itemCount}">
-                    <button class="remove-btn" data-id="${itemCount}">χ</button>
+                    <button class="remove-btn" data-id="${itemCount}">Remove</button>
                 `;
                 itemsContainer.appendChild(itemRow);
                 
